@@ -72,15 +72,14 @@ class DataFrameJ1939Decoder(DataFrameDecoder):
                 # Can't decode this message, continue.
                 continue
             
-            # Extract the correct indices.
+            # Extract the correct indices, and translate from the extended IDs to the full dataframe.
             id_indices = np.where(raw_pgns == pgn)[0]
+            index = raw_index[id_indices]
+            reduced_df = df.loc[index, :]
             
-            # Extract data and index.
-            data_lists = df["DataBytes"].values[id_indices]
+            data_lists = reduced_df["DataBytes"]
             frame_data = np.array([a for a in data_lists], dtype=np.uint8)
             frame_ids = raw_ids[id_indices]
-            
-            index = raw_index[id_indices]
             
             # Decode each signal contained in this frame.
             for signal in frame.signals:

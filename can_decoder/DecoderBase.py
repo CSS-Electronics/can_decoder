@@ -124,8 +124,7 @@ class DecoderBase(object, metaclass=ABCMeta):
         :return:        Array of decoded data.
         """
         if signal.is_float:
-            # data = cls._handle_float_signal(signal, data)
-            raise RuntimeError("Float not yet supported")
+            data = cls._handle_float_signal(signal, data)
         else:
             data = cls._handle_integer_signal(signal, data)
     

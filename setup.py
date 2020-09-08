@@ -31,5 +31,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires='>=3.5',
     url="https://github.com/CSS-Electronics/can_decoder",
-    version="0.0.1",
+    version="0.0.2",
 )
