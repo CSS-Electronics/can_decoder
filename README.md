@@ -39,8 +39,8 @@ import mdf_iter
 mdf_path = "00000001.MF4"
 dbc_path = "j1939.dbc"
 
-dbc_file = can_decoder.load_dbc(dbc_path)
-df_decoder = can_decoder.DataFrameDecoder(dbc_file)
+db = can_decoder.load_dbc(dbc_path)
+df_decoder = can_decoder.DataFrameDecoder(db)
 
 with open(mdf_path, "rb") as handle:
     mdf_file = mdf_iter.MdfFile(handle)
@@ -60,11 +60,11 @@ Data decoding is based on a set of signals which can be grouped together in fram
 ##### From a DBC file
 If `canmatrix` is installed, the library can load the conversion rules from a DBC file:
 ```
-dbc_file = can_decoder.load_dbc(dbc_path)
+db = can_decoder.load_dbc(dbc_path)
 ```
 By default, the output will distinguish signals by the signal name (e.g. EngineSpeed). It is possible to switch from the primary signal name to another signal attribute in the DBC file by supplying the optional `use_custom_attribute` keyword. This takes the form of a string, and can e.g. be used to select SPNs instead of signal names in a J1939 DBC file. If no valid attribute is found, the signal name is used instead.
 ```
-dbc_file = can_decoder.load_dbc(dbc_path, use_custom_attribute="SPN")
+db = can_decoder.load_dbc(dbc_path, use_custom_attribute="SPN")
 ```
 
 #### Data conversion
@@ -76,7 +76,7 @@ The library supports two methods of decoding data:
 For iterative decoding (frame-by-frame), the library uses the `IteratorDecoder` class. This class takes a set of conversion rules (e.g. from a DBC file) and an iterable object (e.g. a MDF file):
 
 ```
-decoder = can_decoder.IteratorDecoder(mdf_file, dbc_file)
+decoder = can_decoder.IteratorDecoder(mdf_file, db)
 
 for record in decoder:
     ...
@@ -101,7 +101,7 @@ The output is of the form `decoded_signal`, which is a `namedtuple` with the fol
 For batch conversion of messages, the library uses the `DataFrameDecoder` class. This is constructed with the conversion rules as a parameter and can be re-used several times from the same set of parameters:
 
 ```
-df_decoder = can_decoder.DataFrameDecoder(dbc_file)
+df_decoder = can_decoder.DataFrameDecoder(db)
 
 df_phys_1 = df_decoder.decoder_frame(df_raw_1)
 df_phys_2 = df_decoder.decoder_frame(df_raw_2)

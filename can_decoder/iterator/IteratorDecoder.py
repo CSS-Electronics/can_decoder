@@ -7,6 +7,7 @@ from typing import Iterable
 from can_decoder.DecoderBase import DecoderBase
 from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
+from can_decoder.iterator.can_record import can_record
 from can_decoder.iterator.decoded_signal import decoded_signal
 
 
@@ -80,6 +81,18 @@ class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
         while self._signal_fifo.empty():
             # Extract data from the wrapped iterator.
             data = self._wrapped_iter.__next__()
+            
+            if isinstance(data, dict):
+                try:
+                    data = can_record(
+                        TimeStamp=data["TimeStamp"],
+                        ID=data["ID"],
+                        IDE=data["IDE"],
+                        DataBytes=data["DataBytes"],
+                        )
+                except KeyError as e:
+                    print("Missing key in data dictionary: {}, skipping".format(str(e)))
+                    continue
             
             self._get_data(data)
         
