@@ -1,15 +1,14 @@
-from typing import Dict
-
 import canmatrix
 
 from os import PathLike
+from typing import Union, BinaryIO
 
 from can_decoder.Frame import Frame
 from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
 
 
-def load_dbc(dbc_file: PathLike, *args, **kwargs):
+def load_dbc(dbc_file: Union[PathLike, BinaryIO], *args, **kwargs):
     """From a DBC file, load a set of frames and signals for conversion.
     
     :param dbc_file:    Path to a DBC file.
@@ -22,9 +21,15 @@ def load_dbc(dbc_file: PathLike, *args, **kwargs):
     # If a custom attribute is requested, determine the name here.
     use_custom_attribute = kwargs.get("use_custom_attribute", None)
     
-    # Load the file using canmatrix.
-    with open(dbc_file, "rb") as handle:
-        dbc = canmatrix.formats.load_flat(handle, "dbc")
+    # Attempt to determine the type of the input. Check for file-like first, attempt to use as a path second.
+    if all(hasattr(dbc_file, attr) for attr in ("seek", "read", "readline")):
+        dbc = canmatrix.formats.load_flat(dbc_file, "dbc")
+    else:
+        try:
+            with open(dbc_file, "rb") as handle:
+                dbc = canmatrix.formats.load_flat(handle, "dbc")
+        except:
+            raise ValueError("Could not determine if the input argument \"dbc_file\" is a path or a file handle")
         
     # Create a new DB instance.
     result = SignalDB(protocol=dbc.attribute("ProtocolType", None))
@@ -89,7 +94,7 @@ def load_dbc(dbc_file: PathLike, *args, **kwargs):
                         break
                 
                 if multiplexer_signal is None:
-                    raise RuntimeError("Could not find multiplexor")
+                    raise RuntimeError("Could not find multiplexer")
                 
                 # Find all depending signals.
                 multiplexer_signal.signals = multiplexed[multiplexer_name]
