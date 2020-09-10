@@ -1,11 +1,10 @@
 from abc import abstractmethod, ABCMeta
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 
 from can_decoder.DecoderBase import DecoderBase
-from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
 
 
@@ -56,14 +55,14 @@ class DataFrameDecoder(DecoderBase, metaclass=ABCMeta):
 
     @classmethod
     def _get_fused_ids(cls, df: pd.DataFrame) -> np.ndarray:
-        """To simplify operations, merge the ID and IDE columns into a single entity. The most significant bit is set to
-        the IDE value.
+        """To simplify operations, merge the ID and IDE columns into a single entity. The most significant bit is set
+         to the IDE value.
         
-        For instance, a non-extended CAN ID of :code:`0x7FF` would become :code:`0x000007FF`, while the extended pendent
-        would be :code:`0x800007FF`.
+        For instance, a non-extended CAN ID of :code:`0x7FF` would become :code:`0x000007FF`, while the extended
+         pendent would be :code:`0x800007FF`.
         
-        Expects the DataFrame to contain a column withs CAN IDs named **ID** and a column with the extended ID flag named
-        **IDE**.
+        Expects the DataFrame to contain a column withs CAN IDs named **ID** and a column with the extended ID flag
+         named **IDE**.
         
         :param df:  Dataframe containing ID and IDE data.
         :return:    Array of uint32, where the lowest 29 bits contain the CAN ID, and the highest bit contain the IDE
@@ -75,10 +74,11 @@ class DataFrameDecoder(DecoderBase, metaclass=ABCMeta):
         
         if ide_column is None:
             raise RuntimeError("Missing column")
-
+        
+        # Cast to expected datatypes to ensure manual entry of data does not pose issues.
         result = ide_column.to_numpy(dtype=np.uint32, copy=True)
         result <<= 31
-        result |= id_column.array
+        result |= id_column.to_numpy(dtype=np.uint32, copy=True)
         
         return result
     

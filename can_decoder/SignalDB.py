@@ -1,19 +1,16 @@
-from collections import defaultdict
 from typing import Optional
 
 from can_decoder.Frame import Frame
 
 
 class SignalDB(object):
-    _protocol = None  # type: Optional[str]
-    frames = defaultdict()
-    
     def __init__(self, protocol: Optional[str] = None):
         """Create a new signal database, with a pre-defined protocol.
         
         :param protocol: Protocol to associate with the database.
         """
         self._protocol = protocol
+        self.frames = {}
         pass
     
     @property

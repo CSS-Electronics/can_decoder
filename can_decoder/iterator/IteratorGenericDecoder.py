@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterable, List, Optional
 
 import numpy as np
@@ -57,8 +57,8 @@ class IteratorGenericDecoder(IteratorDecoder):
         self._add_data(
             index=time_stamp,
             can_id=signal_id,
-            data_raw=signal_data_raw[0],
-            data_physical=signal_data[0],
+            data_raw=signal_data_raw[0, 0],
+            data_physical=signal_data[0, 0],
             signal=signal
         )
     
@@ -79,7 +79,7 @@ class IteratorGenericDecoder(IteratorDecoder):
         
         # Extract the raw data and the timestamp.
         frame_data = np.array([list(data.DataBytes)], dtype=np.uint8)
-        time_stamp = datetime.utcfromtimestamp(data.TimeStamp * 1E-9)
+        time_stamp = datetime.utcfromtimestamp(data.TimeStamp * 1E-9).replace(tzinfo=timezone.utc)
 
         for signal in frame.signals:
             if signal.is_multiplexer:

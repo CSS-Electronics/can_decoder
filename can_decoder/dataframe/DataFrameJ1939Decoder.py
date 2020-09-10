@@ -11,7 +11,7 @@ from can_decoder.support import get_j1939_limit
 class DataFrameJ1939Decoder(DataFrameDecoder):
     """Optimized method for decoding J1939 in bulk.
 
-    Assumes that DLC always is 8 bytes.
+    Assumes that DLC always encodes for 8 bytes.
     """
     
     def __init__(self, conversion_rules: SignalDB):

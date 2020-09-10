@@ -1,0 +1,2 @@
+include versioneer.py
+include can_decoder/_version.py

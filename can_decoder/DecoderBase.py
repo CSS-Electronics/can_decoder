@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from can_decoder.exceptions.DataSizeMismatch import DataSizeMismatch
 from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
 
@@ -21,7 +22,7 @@ class DecoderBase(object, metaclass=ABCMeta):
 
         :return:    List of supported protocols.
         """
-        raise NotImplementedError("")
+        raise NotImplementedError("")  # pragma: no cover
 
     @classmethod
     def _extract_signal_bits(cls, signal: Signal, data: np.ndarray) -> np.ndarray:
@@ -84,7 +85,7 @@ class DecoderBase(object, metaclass=ABCMeta):
         # Construct the corresponding unsigned datatype.
         signal_single_datatype = "<u{}".format(signal_size_in_bytes)
     
-        if len(signal_data.shape) == 0:
+        if len(signal_data.shape) == 1:
             # Frames with one dimension are simple to handle.
             new_shape = signal_data.shape[0]
         elif signal_size_in_bytes in (3, 5, 6, 7):
@@ -105,10 +106,13 @@ class DecoderBase(object, metaclass=ABCMeta):
             signal_data = expanded_data
             new_shape = next_size * data.shape[0]
         else:
-            new_shape = signal_size_in_bytes * data.shape[0]
+            new_shape = (data.shape[0], signal_size_in_bytes)
     
         # Reshape to a single dimension.
-        reshaped_data = signal_data.reshape(new_shape)
+        try:
+            reshaped_data = signal_data.reshape(new_shape)
+        except ValueError as e:
+            raise DataSizeMismatch()
     
         # Interpret as single datatype.
         data_return = reshaped_data.view(dtype=signal_single_datatype)

@@ -1,5 +1,5 @@
-import platform
 import setuptools
+import versioneer
 
 from pathlib import Path
 
@@ -21,9 +21,10 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
+    cmdclass=versioneer.get_cmdclass(),
     description="Utilities to decode CAN log files",
     install_requires=[
-        "numpy",
+        "numpy"
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,5 +32,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires='>=3.5',
     url="https://github.com/CSS-Electronics/can_decoder",
-    version="0.0.3",
+    version=versioneer.get_version(),
 )

@@ -1,3 +1,4 @@
 *.mf4 filter=lfs diff=lfs merge=lfs -text
 *.MF4 filter=lfs diff=lfs merge=lfs -text
 *.dbc filter=lfs diff=lfs merge=lfs -text
+can_decoder/_version.py export-subst

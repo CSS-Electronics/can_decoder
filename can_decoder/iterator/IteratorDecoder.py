@@ -8,7 +8,7 @@ from can_decoder.DecoderBase import DecoderBase
 from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
 from can_decoder.iterator.can_record import can_record
-from can_decoder.iterator.decoded_signal import decoded_signal
+from can_decoder.iterator.DecodedSignal import DecodedSignal
 
 
 class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
@@ -46,7 +46,7 @@ class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
         self._signal_fifo = queue.Queue()
         return
 
-    def __iter__(self) -> Iterable[decoded_signal]:
+    def __iter__(self) -> Iterable[DecodedSignal]:
         self._wrapped_iter = self._wrapped.__iter__()
         return self
     
@@ -56,7 +56,7 @@ class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
         
         :return:
         """
-        raise NotImplementedError("")
+        raise NotImplementedError()  # pragma: no cover
     
     def _add_data(
             self,
@@ -67,7 +67,7 @@ class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
             signal: Signal
     ):
         self._signal_fifo.put_nowait(
-            decoded_signal(
+            DecodedSignal(
                 TimeStamp=index,
                 CanID=can_id,
                 SignalValueRaw=data_raw,
@@ -77,7 +77,7 @@ class IteratorDecoder(DecoderBase, metaclass=ABCMeta):
         )
         return
     
-    def __next__(self) -> decoded_signal:
+    def __next__(self) -> DecodedSignal:
         while self._signal_fifo.empty():
             # Extract data from the wrapped iterator.
             data = self._wrapped_iter.__next__()

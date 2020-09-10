@@ -1,6 +1,10 @@
-__pycache__
-.idea
-build
-can_decoder.egg-info
-dist
+/__pycache__/
+/.idea/
+/.pytest_cache/
+/.tox/
+/build/
+/can_decoder.egg-info/
+/dist/
+/htmlcov/
 
+/.coverage

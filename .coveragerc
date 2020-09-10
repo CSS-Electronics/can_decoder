@@ -1,0 +1,10 @@
+[run]
+source =
+    can_decoder
+    tests
+
+[paths]
+source =
+    src/can_decoder
+    */site-packages/can_decoder
+
