@@ -54,7 +54,13 @@ class Signal(object):
         )
     
     def __repr__(self) -> str:
-        return "Signal {}:{}".format(
+        name = self.name
+        
+        if name == "":
+            name = "Unnamed"
+        
+        return "Signal \"{}\" {}:{}".format(
+            name,
             self.start_bit,
             self.size
         )

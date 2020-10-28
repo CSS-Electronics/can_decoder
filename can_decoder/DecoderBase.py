@@ -1,11 +1,14 @@
-from abc import ABCMeta, abstractmethod
-from typing import List, Optional
+import warnings
 
 import numpy as np
 
-from can_decoder.exceptions.DataSizeMismatch import DataSizeMismatch
+from abc import ABCMeta, abstractmethod
+from typing import List, Optional
+
 from can_decoder.Signal import Signal
 from can_decoder.SignalDB import SignalDB
+from can_decoder.warnings.MissingDataWarning import MissingDataWarning
+from can_decoder.warnings.DataSizeMismatchWarning import DataSizeMismatchWarning
 
 
 class DecoderBase(object, metaclass=ABCMeta):
@@ -44,7 +47,11 @@ class DecoderBase(object, metaclass=ABCMeta):
         if stop_bit % 8 != 0:
             stop_byte += 1
     
-        reduced_data = data[:, start_byte:stop_byte]
+        reduced_data = data[:, start_byte:stop_byte]  # type: np.ndarray
+        
+        if reduced_data.size == 0:
+            warnings.warn("No data found for signal {}".format(signal), MissingDataWarning)
+            return np.empty(shape=(data.shape[0], 0))
     
         # Determine how to read the data depending on the endianness.
         if signal.is_little_endian:
@@ -66,7 +73,7 @@ class DecoderBase(object, metaclass=ABCMeta):
         return packed
 
     @classmethod
-    def _decode_signal_raw(cls, signal: Signal, data: np.ndarray) -> np.ndarray:
+    def _decode_signal_raw(cls, signal: Signal, data: np.ndarray) -> Optional[np.ndarray]:
         """Given a signal and frame data, extract the raw value of the signal.
 
         :param signal:  Signal to extract.
@@ -76,7 +83,10 @@ class DecoderBase(object, metaclass=ABCMeta):
     
         # Extract only the bits relevant for this signal.
         signal_data = cls._extract_signal_bits(signal, data)
-    
+
+        if signal_data.size == 0:
+            return signal_data
+
         # Interpret as a single value instead of an array.
         signal_size_in_bytes = signal.size // 8
         if signal.size % 8 != 0:
@@ -112,7 +122,8 @@ class DecoderBase(object, metaclass=ABCMeta):
         try:
             reshaped_data = signal_data.reshape(new_shape)
         except ValueError as e:
-            raise DataSizeMismatch()
+            warnings.warn("Could not shape data for {}".format(signal), DataSizeMismatchWarning)
+            return np.empty(shape=(new_shape[0], 0))
     
         # Interpret as single datatype.
         data_return = reshaped_data.view(dtype=signal_single_datatype)

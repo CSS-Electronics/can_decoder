@@ -136,8 +136,10 @@ class TestDataFrameManualOBD2(object):
     
         test_data = pd.DataFrame(frames).set_index("TimeStamp")
         
-        with pytest.raises(can_decoder.CANDecoderException):
-            uut.decode_frame(test_data)
+        with pytest.warns(can_decoder.CANDecoderWarning):
+            result = uut.decode_frame(test_data)
+        
+        assert result.size == 0
         
         return
     

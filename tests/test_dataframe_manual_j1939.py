@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 
 
 @pytest.mark.env("pandas")
-class TestDataFrameManualOBD2(object):
+class TestDataFrameManualJ1939(object):
     
     @pytest.fixture()
     def db_j1939(self):
@@ -140,9 +140,11 @@ class TestDataFrameManualOBD2(object):
         ]
     
         test_data = pd.DataFrame(frames).set_index("TimeStamp")
+
+        with pytest.warns(can_decoder.CANDecoderWarning):
+            result = uut.decode_frame(test_data)
         
-        with pytest.raises(can_decoder.CANDecoderException):
-            uut.decode_frame(test_data)
+        assert result.size == 0
         
         return
     

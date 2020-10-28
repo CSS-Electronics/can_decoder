@@ -56,7 +56,7 @@ class IteratorJ1939Decoder(IteratorDecoder):
             signal_data_raw = self._decode_signal_raw(signal, frame_data)
 
             # Ensure the signal is valid.
-            if not is_valid_j1939_signal(signal_data_raw[0], signal.size):
+            if signal_data_raw.size == 0 or not is_valid_j1939_signal(signal_data_raw[0], signal.size):
                 continue
             
             signal_data = self._decode_signal_raw_to_phys(signal, signal_data_raw)

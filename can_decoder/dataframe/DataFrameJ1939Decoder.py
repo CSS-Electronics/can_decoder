@@ -1,11 +1,13 @@
-from typing import List, Optional
-
 import numpy as np
 import pandas as pd
+import warnings
 
-from can_decoder.dataframe.DataFrameDecoder import DataFrameDecoder
+from typing import List, Optional
+
 from can_decoder.SignalDB import SignalDB
 from can_decoder.support import get_j1939_limit
+from can_decoder.dataframe.DataFrameDecoder import DataFrameDecoder
+from can_decoder.warnings.DataSizeMismatchWarning import DataSizeMismatchWarning
 
 
 class DataFrameJ1939Decoder(DataFrameDecoder):
@@ -21,21 +23,70 @@ class DataFrameJ1939Decoder(DataFrameDecoder):
         self._frames = {}
         
         for frame_id, frame in self._db.frames.items():
-            pgn = (frame_id & 0x03FFFF00) >> 8
-            
-            pgn_f = (pgn & 0xFF00) >> 8
-            pgn_s = pgn & 0x00FF
-            
-            if pgn_f < 240:
-                pgn &= 0xFFFFFF00
-            
+            pgn = self._calculate_pgn(frame_id)
             self._frames[pgn] = frame
         
         return
-
+    
+    @staticmethod
+    def _calculate_pgn(frame_id):
+        pgn = (frame_id & 0x03FFFF00) >> 8
+    
+        pgn_f = (pgn & 0xFF00) >> 8
+        pgn_s = pgn & 0x00FF
+    
+        if pgn_f < 240:
+            pgn &= 0xFFFFFF00
+        
+        return pgn
+    
     @classmethod
     def get_supported_protocols(cls) -> Optional[List[str]]:
         return ["J1939"]
+    
+    def _decode_frame_with_well_formed_data(self, reduced_df, frame, raw_ids, id_indices, *args, **kwargs):
+        # Should invalid values be ignored? Defaults to true.
+        ignore_invalid = kwargs.get("ignore_invalid_signals", True)
+
+        data_lists = reduced_df["DataBytes"]
+        index = reduced_df.index
+        
+        frame_data = np.array([a for a in data_lists], dtype=np.uint8)
+        frame_ids = raw_ids[id_indices]
+    
+        # Decode each signal contained in this frame.
+        for signal in frame.signals:
+            # Get the raw representation.
+            signal_data = self._decode_signal_raw(signal, frame_data)
+        
+            # Determine which measurements are invalid and need to be removed.
+            valid_indices = np.array(range(0, len(signal_data)), dtype=np.uint64)
+            if ignore_invalid:
+                limit = get_j1939_limit(signal.size)
+                valid_indices = np.argwhere(signal_data < limit)[:, 0]
+        
+            if valid_indices.shape[0] == 0:
+                # Early skip if no valid data is located.
+                continue
+        
+            # Create a new DataFrame to contain the results.
+            result = pd.DataFrame(index=index[valid_indices])
+        
+            # Get raw and decoded data.
+            signal_data_raw = signal_data[valid_indices]
+            signal_data = self._decode_signal_raw_to_phys(signal, signal_data_raw)
+        
+            # Add custom fields.
+            result["CAN ID"] = frame_ids[valid_indices] & 0x1FFFFFFF
+            result["PGN"] = self._calculate_pgn(frame.id)
+            result["Source Address"] = frame_ids[valid_indices] & np.uint32(0x000000FF)
+            result["Signal"] = signal.name
+            result["Raw Value"] = signal_data_raw
+            result["Physical Value"] = signal_data
+        
+            self._add_series(result)
+            
+        return
     
     def _decode_frame(self, df: pd.DataFrame, *args, **kwargs):
         # Should invalid values be ignored? Defaults to true.
@@ -77,41 +128,10 @@ class DataFrameJ1939Decoder(DataFrameDecoder):
             index = raw_index[id_indices]
             reduced_df = df.loc[index, :]
             
-            data_lists = reduced_df["DataBytes"]
-            frame_data = np.array([a for a in data_lists], dtype=np.uint8)
-            frame_ids = raw_ids[id_indices]
-            
-            # Decode each signal contained in this frame.
-            for signal in frame.signals:
-                # Get the raw representation.
-                signal_data = self._decode_signal_raw(signal, frame_data)
-
-                # Determine which measurements are invalid and need to be removed.
-                valid_indices = np.array(range(0, len(signal_data)), dtype=np.uint64)
-                if ignore_invalid:
-                    limit = get_j1939_limit(signal.size)
-                    valid_indices = np.argwhere(signal_data < limit)[:, 0]
-
-                if valid_indices.shape[0] == 0:
-                    # Early skip if no valid data is located.
-                    continue
-                
-                # Create a new DataFrame to contain the results.
-                result = pd.DataFrame(index=index[valid_indices])
-                
-                # Get raw and decoded data.
-                signal_data_raw = signal_data[valid_indices]
-                signal_data = self._decode_signal_raw_to_phys(signal, signal_data_raw)
-                
-                # Add custom fields.
-                result["CAN ID"] = frame_ids[valid_indices] & 0x1FFFFFFF
-                result["PGN"] = pgn
-                result["Source Address"] = frame_ids[valid_indices] & np.uint32(0x000000FF)
-                result["Signal"] = signal.name
-                result["Raw Value"] = signal_data_raw
-                result["Physical Value"] = signal_data
-                
-                self._add_series(result)
+            try:
+                self._decode_frame_with_well_formed_data(reduced_df, frame, raw_ids, id_indices)
+            except ValueError as e:
+                warnings.warn("Could not shape data for PGN {}".format(pgn), DataSizeMismatchWarning)
             
             pass
         

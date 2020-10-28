@@ -89,9 +89,11 @@ class TestIteratorManualJ1939(object):
         
         # Setup UUT.
         uut = can_decoder.IteratorDecoder(frames, db_j1939)
-        
-        with pytest.raises(can_decoder.CANDecoderException):
-            list(uut)
+
+        with pytest.warns(can_decoder.CANDecoderWarning):
+            result = list(uut)
+
+        assert len(result) == 0
     
         return
     

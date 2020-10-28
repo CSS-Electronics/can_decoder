@@ -3,6 +3,7 @@ from random import randint
 
 import pytest
 import can_decoder
+
 from tests.FillType import FillType
 
 
@@ -131,9 +132,11 @@ class TestIteratorManualOBD2(object):
         # Setup UUT.
         uut = can_decoder.IteratorDecoder(frames, db_obd2)
         
-        with pytest.raises(can_decoder.CANDecoderException):
-            list(uut)
-    
+        with pytest.warns(can_decoder.CANDecoderWarning):
+            result = list(uut)
+        
+        assert len(result) == 0
+        
         return
 
     def test_no_matching_rule(self, db_obd2):

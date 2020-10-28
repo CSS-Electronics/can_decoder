@@ -76,6 +76,10 @@ class DataFrameGenericDecoder(DataFrameDecoder):
     
     def _decode(self, signal, signal_data, signal_index, signal_ids):
         signal_data_raw = self._decode_signal_raw(signal, signal_data)
+        
+        if signal_data_raw.size == 0:
+            return
+        
         signal_data = self._decode_signal_raw_to_phys(signal, signal_data_raw)
     
         # Create a resulting series.
