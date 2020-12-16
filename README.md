@@ -46,7 +46,7 @@ with open(mdf_path, "rb") as handle:
     mdf_file = mdf_iter.MdfFile(handle)
     df_raw = mdf_file.get_data_frame()
 
-df_phys = df_decoder.decoder_frame(df_raw)
+df_phys = df_decoder.decode_frame(df_raw)
 print(df_phys)
 ```
 
@@ -103,8 +103,8 @@ For batch conversion of messages, the library uses the `DataFrameDecoder` class.
 ```
 df_decoder = can_decoder.DataFrameDecoder(db)
 
-df_phys_1 = df_decoder.decoder_frame(df_raw_1)
-df_phys_2 = df_decoder.decoder_frame(df_raw_2)
+df_phys_1 = df_decoder.decode_frame(df_raw_1)
+df_phys_2 = df_decoder.decode_frame(df_raw_2)
 ```
 
 The data supplied should be similar to that of the iterator method, but as a DataFrame. See also the initial example. Unlike the iterator component, this method does not require the presence of a time stamp entry. Instead, the index of the DataFrame passed to the decoder will be used as the index in the resulting DataFrame.
@@ -126,5 +126,5 @@ When decoding data using a J1939 DBC, the output includes the following extra co
 
 To remove columns from the output you can use the keyword `columns_to_drop`:
 ```
-df_phys = df_decoder.decoder_frame(df_raw, columns_to_drop=["CAN ID", "Raw Value"])
+df_phys = df_decoder.decode_frame(df_raw, columns_to_drop=["CAN ID", "Raw Value"])
 ```
