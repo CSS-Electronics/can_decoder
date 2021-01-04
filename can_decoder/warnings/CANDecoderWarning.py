@@ -1,0 +1,2 @@
+class CANDecoderWarning(UserWarning):
+    pass
