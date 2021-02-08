@@ -114,7 +114,7 @@ class DecoderBase(object, metaclass=ABCMeta):
             expanded_data[:, signal_size_in_bytes:] = 0
         
             signal_data = expanded_data
-            new_shape = next_size * data.shape[0]
+            new_shape = (data.shape[0], next_size)
         else:
             new_shape = (data.shape[0], signal_size_in_bytes)
     
