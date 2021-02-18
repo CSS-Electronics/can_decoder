@@ -27,27 +27,29 @@ class IteratorGenericDecoder(IteratorDecoder):
         # Find signals for each id.
         for unique_id in unique_multiplexed_ids:
             indices = np.where(demultiplexed_ids == unique_id)[0]
+            signals = multiplexer.signals.get(unique_id, [])
         
-            signal = multiplexer.signals[unique_id]
             signal_data = frame_data[indices, :]
-        
-            if signal.is_multiplexer:
-                # Recursive decoding.
-                self._decode_multiplexed(
-                    can_id=can_id,
-                    frame_data=signal_data,
-                    index=index,
-                    multiplexer=signal
-                )
-            else:
-                # No more multiplexing, decode.
-                self._decode(
-                    signal=signal,
-                    signal_data=signal_data,
-                    time_stamp=index,
-                    signal_id=can_id
-                )
-            pass
+
+            for signal in signals:
+                if signal.is_multiplexer:
+                    # Recursive decoding.
+                    self._decode_multiplexed(
+                        can_id=can_id,
+                        frame_data=signal_data,
+                        index=index,
+                        multiplexer=signal
+                    )
+                else:
+                    # No more multiplexing, decode.
+                    self._decode(
+                        signal=signal,
+                        signal_data=signal_data,
+                        time_stamp=index,
+                        signal_id=can_id
+                    )
+                
+                pass
         return
 
     def _decode(self, signal, signal_data, time_stamp, signal_id):

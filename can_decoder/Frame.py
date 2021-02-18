@@ -63,12 +63,20 @@ Should the signal have been added to another signal as a multiplexed value?
         
         return result
     
-    def __repr__(self) -> str:
-        return "CAN Frame with ID 0x{:08X} - {} bytes. {} registered signals".format(
-            self.id,
-            self.size,
-            len(self.signals)
-        )
+    def __str__(self) -> str:
+        result = f"CAN Frame with ID 0x{self.id:08X} - {self.size} bytes and {len(self.signals)} direct signals"
+        
+        for signal in self.signals:
+            signal_str = str(signal)
+    
+            for line in signal_str.splitlines():
+                result += f"\n\t{line}"
+        
+        if self.multiplexer:
+            # TODO: Count multiplexed signals
+            pass
+        
+        return result
     
     def __hash__(self) -> int:
         return hash(self._get_tuple())

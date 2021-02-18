@@ -25,13 +25,12 @@ class DataFrameGenericDecoder(DataFrameDecoder):
             index: pd.Index,
             multiplexer: Signal
     ):
-        """Decode a multiplexed signal.
+        """Decode a multiplexed signal. Will recurse on itself if necessary.
         
         :param frame_data:
         :param frame_ids:
         :param index:
         :param multiplexer:
-        :return:
         """
         # Find corresponding multiplexer values.
         demultiplexed_ids = self._decode_signal_raw(multiplexer, frame_data)
@@ -39,38 +38,35 @@ class DataFrameGenericDecoder(DataFrameDecoder):
         # Bundle these into unique IDs.
         unique_multiplexed_ids = np.unique(demultiplexed_ids)
         
-        # Find signals for each id.
+        # Find signals for each ID.
         for unique_id in unique_multiplexed_ids:
             indices = np.where(demultiplexed_ids == unique_id)[0]
+            signals = multiplexer.signals.get(unique_id, [])
             
-            signal = multiplexer.signals.get(unique_id, None)
-            
-            if signal is None:
-                # Cannot decode this multiplex value, continue.
-                continue
-            
+            # Shared variables amongs all signals for this ID.
             signal_data = frame_data[indices, :]
             signal_index = index[indices]
             signal_ids = frame_ids[indices]
             
-            if signal.is_multiplexer:
-                # Recursive decoding.
-                self._decode_multiplexed(
-                    frame_data=signal_data,
-                    frame_ids=signal_ids,
-                    index=signal_index,
-                    multiplexer=signal
-                )
-            else:
-                # No more multiplexing, decode.
-                self._decode(
-                    signal=signal,
-                    signal_data=signal_data,
-                    signal_index=signal_index,
-                    signal_ids=signal_ids
-                )
-            
-            pass
+            for signal in signals:
+                if signal.is_multiplexer:
+                    # Recursive decoding.
+                    self._decode_multiplexed(
+                        frame_data=signal_data,
+                        frame_ids=signal_ids,
+                        index=signal_index,
+                        multiplexer=signal
+                    )
+                else:
+                    # No more multiplexing, decode.
+                    self._decode(
+                        signal=signal,
+                        signal_data=signal_data,
+                        signal_index=signal_index,
+                        signal_ids=signal_ids
+                    )
+    
+                pass
         
         return
     

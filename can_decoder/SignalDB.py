@@ -32,4 +32,16 @@ class SignalDB(object):
         
         return False
     
+    def __str__(self):
+        # Generate a pretty nested tree.
+        result = f"SignalDB with {len(self.frames)} frames"
+
+        for frame in self.frames.values():
+            frame_str = str(frame)
+            
+            for line in frame_str.splitlines():
+                result += f"\n\t{line}"
+
+        return result
+    
     pass

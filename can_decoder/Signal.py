@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Dict, List, Union
 
 
 class Signal(object):
@@ -10,7 +10,7 @@ class Signal(object):
     is_little_endian = True  # type: bool
     is_signed = False  # type: bool
     is_float = False  # type: bool
-    signals = None  # type: Dict[int, Signal]
+    signals = None  # type: Dict[int, List[Signal]]
     
     def __init__(
             self,
@@ -38,7 +38,13 @@ class Signal(object):
         return len(self.signals) != 0
     
     def add_multiplexed_signal(self, id, signal):
-        self.signals[id] = signal
+        mux_group = self.signals.get(id, None)
+        
+        if mux_group is None:
+            mux_group = []
+            self.signals[id] = mux_group
+        
+        mux_group.append(signal)
         return
     
     def _get_tuple(self):
@@ -53,17 +59,27 @@ class Signal(object):
             self.is_float,
         )
     
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         name = self.name
         
         if name == "":
             name = "Unnamed"
         
-        return "Signal \"{}\" {}:{}".format(
-            name,
-            self.start_bit,
-            self.size
-        )
+        result = f"Signal \"{name}\" {self.start_bit}:{self.size}"
+        
+        if self.is_multiplexer:
+            result += f" multiplex for {len(self.signals)} group(s):"
+            
+            for group_id, signals in self.signals.items():
+                result += f"\n\tGroup with ID {group_id} and {len(signals)} signal(s):"
+                
+                for signal in signals:
+                    signal_str = str(signal)
+
+                    for line in signal_str.splitlines():
+                        result += f"\n\t\t{line}"
+                
+        return result
 
     def __hash__(self) -> int:
         return hash(self._get_tuple())
