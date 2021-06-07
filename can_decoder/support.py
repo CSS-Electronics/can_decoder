@@ -28,7 +28,7 @@ def get_j1939_limit(number_of_bits: int) -> int:
     elif number_of_bits == 32:
         limit = 0xFF000000
     else:
-        pass
+        limit = 0xFFFFFFFFFFFFFFFF
     
     return limit
 

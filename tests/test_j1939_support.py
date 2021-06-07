@@ -27,6 +27,10 @@ class TestJ1939Support(object):
             (0xFF00000, 28, False),
             (0xFEFFFFFF, 32, True),
             (0xFF000000, 32, False),
+            (0x1FFFFFFFF, 33, True),
+            (0x0000000000000000, 64, True),
+            (0xFFFFFFFFFFFFFFFE, 64, True),
+            (0xFFFFFFFFFFFFFFFF, 64, False),
         ]
     )
     def test_raw_signal_range(self, value: int, bits: int, expected: bool):
