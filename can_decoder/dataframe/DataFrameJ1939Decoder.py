@@ -61,7 +61,7 @@ class DataFrameJ1939Decoder(DataFrameDecoder):
         
             # Determine which measurements are invalid and need to be removed.
             valid_indices = np.array(range(0, len(signal_data)), dtype=np.uint64)
-            if ignore_invalid:
+            if ignore_invalid and not signal.is_signed:
                 limit = get_j1939_limit(signal.size)
                 valid_indices = np.argwhere(signal_data < limit)[:, 0]
         

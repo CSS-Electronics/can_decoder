@@ -1,4 +1,5 @@
 import pytest
+from can_decoder.Signal import Signal
 
 from can_decoder.support import is_valid_j1939_signal
 
@@ -34,7 +35,13 @@ class TestJ1939Support(object):
         ]
     )
     def test_raw_signal_range(self, value: int, bits: int, expected: bool):
-        assert is_valid_j1939_signal(value, bits) == expected
+        signal = Signal(
+            signal_name="test_signal",
+            signal_start_bit=0,
+            signal_size=bits
+        )
+        
+        assert is_valid_j1939_signal(value, signal) == expected
         
         return
     

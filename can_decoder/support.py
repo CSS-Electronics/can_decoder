@@ -1,3 +1,6 @@
+from can_decoder.Signal import Signal
+
+
 def get_j1939_limit(number_of_bits: int) -> int:
     """For a given signal length in bits, return the lowest invalid value, if the data was represented as an unsigned
     integer.
@@ -33,14 +36,18 @@ def get_j1939_limit(number_of_bits: int) -> int:
     return limit
 
 
-def is_valid_j1939_signal(raw_value: int, number_of_bits: int) -> bool:
+def is_valid_j1939_signal(raw_value: int, signal: Signal) -> bool:
     """Given a raw J1939 signal value and the signal length in bits, determine if the signal is valid,
     
     :param raw_value:       The raw J1939 signal value.
-    :param number_of_bits:  The length of the J1939 signal in bits.
+    :param signal:  The length of the J1939 signal in bits.
     :return:                True if signal is in the valid region, False otherwise.
     """
-    limit = get_j1939_limit(number_of_bits)
+    if signal.is_signed:
+        # Early exit for signed signals.
+        return True
+    
+    limit = get_j1939_limit(signal.size)
     
     if raw_value >= limit:
         result = False
