@@ -63,13 +63,19 @@ class DBCLoader(object):
         # the loading loop).
         for dbc_signal in dbc_frame.signals:
             if dbc_signal.is_multiplexer and dbc_signal.mux_val is None:
-                # Multiplexer, but is not self multiplexed.
-                frame.add_signal(
-                    self._multiplexed_signal_loader(
+                # Multiplexer, but is not self multiplexed. Check complexity.
+                if dbc_frame.is_complex_multiplexed is True:
+                    signal = self._multiplexed_signal_loader_complex(
                         muxer_signal=dbc_signal,
                         dbc_signals=dbc_frame.signals
                     )
-                )
+                else:
+                    signal = self._multiplexed_signal_loader_simple(
+                        muxer_signal=dbc_signal,
+                        dbc_signals=dbc_frame.signals
+                    )
+                    
+                frame.add_signal(signal)
             elif not dbc_signal.is_multiplexer and dbc_signal.mux_val is None:
                 # Not a multiplexer and not a multiplexed signal.
                 frame.add_signal(self._signal_loader(dbc_signal=dbc_signal))
@@ -77,18 +83,21 @@ class DBCLoader(object):
     
         return frame
 
-    def _multiplexed_signal_loader(self, muxer_signal: canmatrix.Signal, dbc_signals: Sequence[canmatrix.Signal]) -> Signal:
+    def _multiplexed_signal_loader_complex(self, muxer_signal: canmatrix.Signal, dbc_signals: Sequence[canmatrix.Signal]) -> Signal:
         # Convert root signal.
         multiplexed_signal = self._signal_loader(muxer_signal)
     
         # Locate all signals this is multiplexing for.
         for signal in dbc_signals:
+            if signal == muxer_signal:
+                continue
+            
             if signal.muxer_for_signal == muxer_signal.name:
                 if signal.is_multiplexer:
                     # Nested loading required, as this is a multiplexer for another signal.
                     multiplexed_signal.add_multiplexed_signal(
                         signal.mux_val,
-                        self._multiplexed_signal_loader(signal, dbc_signals)
+                        self._multiplexed_signal_loader_complex(signal, dbc_signals)
                     )
                 else:
                     # Plain signal, use as normal.
@@ -97,6 +106,32 @@ class DBCLoader(object):
                         self._signal_loader(signal)
                     )
                     pass
+                pass
+            pass
+    
+        return multiplexed_signal
+
+    def _multiplexed_signal_loader_simple(self, muxer_signal: canmatrix.Signal, dbc_signals: Sequence[canmatrix.Signal]) -> Signal:
+        # Convert root signal.
+        multiplexed_signal = self._signal_loader(muxer_signal)
+    
+        # Locate all signals this is multiplexing for.
+        for signal in dbc_signals:
+            if signal == muxer_signal:
+                continue
+                
+            if signal.is_multiplexer:
+                # Nested loading required, as this is a multiplexer for another signal.
+                multiplexed_signal.add_multiplexed_signal(
+                    signal.mux_val,
+                    self._multiplexed_signal_loader_simple(signal, dbc_signals)
+                )
+            else:
+                # Plain signal, use as normal.
+                multiplexed_signal.add_multiplexed_signal(
+                    signal.mux_val,
+                    self._signal_loader(signal)
+                )
                 pass
             pass
     
