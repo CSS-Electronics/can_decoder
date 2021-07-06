@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 
 from can_decoder.Frame import Frame
+from can_decoder.Signal import Signal
 
 
 class SignalDB(object):
@@ -31,6 +32,28 @@ class SignalDB(object):
             return True
         
         return False
+    
+    def signals(self) -> List[str]:
+        """Get a list of all signals in the database.
+        
+        :return: List of all signals as strings.
+        """
+        result = []
+        
+        def yield_signals(result_list: List[str], signal: Signal):
+            result_list.append(signal.name)
+            
+            if signal.is_multiplexer:
+                for multiplex in signal.signals.values():
+                    for sub_signal in multiplex:
+                        yield_signals(result_list=result_list, signal=sub_signal)
+            return
+
+        for frame in self.frames.values():
+            for signal in frame.signals:
+                yield_signals(result_list=result, signal=signal)
+            
+        return result
     
     def __str__(self):
         # Generate a pretty nested tree.
