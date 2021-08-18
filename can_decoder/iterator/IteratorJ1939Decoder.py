@@ -22,6 +22,26 @@ class IteratorJ1939Decoder(IteratorDecoder):
             self._frames[pgn] = frame
         return
     
+    @staticmethod
+    def _calculate_pgn(frame_id):
+        pgn = (frame_id & 0x03FFFF00) >> 8
+        
+        # Parse PDU format and specific
+        pgn_f = (pgn & 0xFF00) >> 8
+        pgn_s = pgn & 0x00FF
+    
+        # If PDU format is
+        # between 0 and 239, the message is addressable (PDU1) and the PS field contains the destination address
+        # between 240 and 255, the message can only be broadcast (PDU2) and the PS field contains a Group Extension
+        #
+        # In the case of an addressable PDU format, set the dest address to 0 to conform to DBC expectations.
+        # (Assuming there is no support for this functionality).
+        # Source: https://www.kvaser.com/about-can/higher-layer-protocols/j1939-introduction/
+        if pgn_f < 240:
+            pgn &= 0xFFFFFF00
+        
+        return pgn
+    
     @classmethod
     def get_supported_protocols(cls) -> List[Optional[str]]:
         return ["J1939"]
