@@ -54,7 +54,10 @@ class SignalDB(object):
                 yield_signals(result_list=result, signal=signal)
             
         return result
-    
+        
+    def get_frame_by_name(self, name: str) -> Frame:
+      return next((frame for frame in self.frames.values() if frame.name == name), None)
+      
     def __str__(self):
         # Generate a pretty nested tree.
         result = f"SignalDB with {len(self.frames)} frames"
