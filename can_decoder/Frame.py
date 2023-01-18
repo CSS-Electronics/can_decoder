@@ -13,9 +13,11 @@ class Frame(object):
             self,
             frame_id: int,
             frame_size: int,
+            frame_name: str = "",
     ) -> None:
         self.id = frame_id
         self.size = frame_size
+        self.name = frame_name
         self.signals = []
     
     def _get_tuple(self):
@@ -64,7 +66,7 @@ Should the signal have been added to another signal as a multiplexed value?
         return result
     
     def __str__(self) -> str:
-        result = f"CAN Frame with ID 0x{self.id:08X} - {self.size} bytes and {len(self.signals)} direct signals"
+        result = f"CAN Frame with name \"{self.name}\" and ID 0x{self.id:08X} - {self.size} bytes and {len(self.signals)} direct signals"
         
         for signal in self.signals:
             signal_str = str(signal)

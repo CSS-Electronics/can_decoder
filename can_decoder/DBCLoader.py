@@ -56,7 +56,8 @@ class DBCLoader(object):
     def _load_frame(self, dbc_frame: canmatrix.Frame) -> Frame:
         frame = Frame(
             frame_id=dbc_frame.arbitration_id.to_compound_integer(),
-            frame_size=dbc_frame.size
+            frame_size=dbc_frame.size,
+            frame_name=dbc_frame.name
         )
     
         # Loop over all signals, load multiplexed signals using special handler (And thus ignore them in
