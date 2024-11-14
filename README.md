@@ -1,5 +1,12 @@
-# CAN Decoder - DBC decode CAN Bus Data
+# CAN Decoder - DBC decode CAN Data [LEGACY]
 This package lets you DBC decode raw CAN data from the [CANedge](https://www.csselectronics.com/) to human-readable form (physical values) in Python.
+
+## Update: Legacy notice + new Python integration methods
+If you need to work with the CANedge data in Python, we now recommend to use the methods described in the below documentation:
+- CANedge + Python: [About](https://www.csselectronics.com/pages/python-can-bus-api) | [Intro](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/api-tools)
+
+The Python modules `mdf-iter`, `canedge-browser` and `can-decoder` are now considered legacy. We instead refer to our new integration with python-can - and our examples of how to work with DBC decoded Parquet data lakes in Python using our MF4 decoders. For details see the links above.
+
 
 ---
 ### Key features
